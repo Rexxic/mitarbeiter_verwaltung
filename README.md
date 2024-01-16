@@ -26,4 +26,7 @@
 ## Aufgaben
 - [ ] Struktogramm saveEmployee()
 - [ ] Struktogramm toString()
-- [ ] Use-Case-Diagramm Nutzer suchen
+- [ ] Use-Case-Diagramm User
+
+## Use Case Diagram
+![Use Case Diagram](docfiles/Use%20Case.svg)
