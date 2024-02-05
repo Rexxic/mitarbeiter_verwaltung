@@ -30,3 +30,4 @@
 
 ## Use Case Diagram
 ![Use Case Diagram](docfiles/Use%20Case.svg)
+![image](https://github.com/Rexxic/mitarbeiter_verwaltung/assets/156774741/120173a8-7321-48a0-a86c-b2355b72eb8d)
