@@ -84,9 +84,10 @@ namespace mitarbeiter_verwaltung
 
     enum Position
     {
-        CHEF,
-        NEDCHEF,
-        SKLAVE
+        Manager,
+        Assistent,
+        Entwickler,
+        Designer,
     }
 
     class Employee
