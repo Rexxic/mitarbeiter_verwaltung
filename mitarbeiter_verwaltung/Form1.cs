@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -18,6 +17,9 @@ namespace mitarbeiter_verwaltung
         public Form1()
         {
             InitializeComponent();
+            GenerateFields(Employee.GetAttributeNames());
+
+            /*
             LoadData();
             Employee employee = new Employee()
             {
@@ -31,7 +33,38 @@ namespace mitarbeiter_verwaltung
             Console.WriteLine(s);
             Console.WriteLine(Directory.GetCurrentDirectory());
             SaveEmployee(employee);
+            */
         }
+
+        void GenerateFields(List<string> fields)
+        {
+            var k = 0;
+            foreach (var field in fields)
+            {
+                TextBox box = new TextBox();
+                box.Location = new System.Drawing.Point(200, 100 + k * 35);
+                box.Name = field + ":txt";
+                box.Size = new System.Drawing.Size(200, 32);
+                this.splitContainer1.Panel1.Controls.Add(box);
+
+                Label label = new Label();
+                label.AutoSize = true;
+                label.Location = new System.Drawing.Point(50, 103 + k * 35);
+                label.Name = field + ":lbl";
+                label.Size = new System.Drawing.Size(150, 26);
+                label.Text = field;
+                this.splitContainer1.Panel1.Controls.Add(label);
+                k++;
+            }
+            Button button = new Button();
+            button.Location = new System.Drawing.Point(50, 110 + k * 35);
+            button.Name = "button1";
+            button.Size = new System.Drawing.Size(150, 40);
+            button.Text = "Speichern";
+            button.UseVisualStyleBackColor = true;
+            this.splitContainer1.Panel1.Controls.Add(button);
+        }
+
 
         void SaveEmployee(Employee employee)
         {
@@ -254,6 +287,16 @@ namespace mitarbeiter_verwaltung
             }
 
             return stringBuilder.ToString().TrimEnd(';');
+        }
+
+        public static List<string> GetAttributeNames()
+        {
+            List<string> names = new List<string>();
+            foreach (var property in typeof(Employee).GetProperties())
+            {
+                names.Add(property.Name);
+            }
+            return names;
         }
     }
 }
