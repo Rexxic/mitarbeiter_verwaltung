@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -19,22 +20,7 @@ namespace mitarbeiter_verwaltung
         {
             InitializeComponent();
             GenerateFields(Employee.GetAttributeNames());
-
-            /*
             LoadData();
-            Employee employee = new Employee()
-            {
-                Name = "Herbert",
-                Vorname = "Landpfand",
-                Adresse = "In Herbert sei Schuh",
-                Telefon = "07689763784",
-                Email = "Herbert@Schuh.pfand"
-            };
-            string s = employee.ToString();
-            Console.WriteLine(s);
-            Console.WriteLine(Directory.GetCurrentDirectory());
-            SaveEmployee(employee);
-            */
         }
 
         void GenerateFields(List<string> fields)
@@ -46,6 +32,9 @@ namespace mitarbeiter_verwaltung
                 box.Location = new System.Drawing.Point(200, 100 + k * 35);
                 box.Name = field + ":txt";
                 box.Size = new System.Drawing.Size(200, 32);
+                if (box.Name.Equals("Id:txt")) {
+                    box.Enabled = false;
+                }
                 this.splitContainer1.Panel1.Controls.Add(box);
 
                 Label label = new Label();
@@ -57,14 +46,23 @@ namespace mitarbeiter_verwaltung
                 this.splitContainer1.Panel1.Controls.Add(label);
                 k++;
             }
-            Button button = new Button();
-            button.Location = new System.Drawing.Point(50, 110 + k * 35);
-            button.Name = "button1";
-            button.Size = new System.Drawing.Size(150, 40);
-            button.Text = "Speichern";
-            button.UseVisualStyleBackColor = true;
-            button.Click += new EventHandler(save_button_Click);
-            this.splitContainer1.Panel1.Controls.Add(button);
+            Button buttonSave = new Button();
+            buttonSave.Location = new System.Drawing.Point(50, 110 + k * 35);
+            buttonSave.Name = "save:btn";
+            buttonSave.Size = new System.Drawing.Size(150, 40);
+            buttonSave.Text = "Speichern";
+            buttonSave.UseVisualStyleBackColor = true;
+            buttonSave.Click += new EventHandler(SaveButtonClick);
+            this.splitContainer1.Panel1.Controls.Add(buttonSave);
+
+            Button buttonDelete = new Button();
+            buttonDelete.Location = new System.Drawing.Point(250, 110 + k * 35);
+            buttonDelete.Name = "delete:btn";
+            buttonDelete.Size = new System.Drawing.Size(150, 40);
+            buttonDelete.Text = "Löschen";
+            buttonDelete.UseVisualStyleBackColor = true;
+            buttonDelete.Click += new EventHandler(DeleteButtonClick);
+            this.splitContainer1.Panel1.Controls.Add(buttonDelete);
         }
 
         private Employee FromForm()
@@ -102,11 +100,26 @@ namespace mitarbeiter_verwaltung
             return employee;
         }
 
-        private void save_button_Click(object sender, EventArgs e)
+        private void SaveButtonClick(object sender, EventArgs eargs)
         {
             try
             {
-                Console.WriteLine(FromForm().ToString());
+                Employee employee = FromForm();
+                Console.WriteLine(employee.ToString());
+                if (employee.Id == 0)
+                {
+                    int i = 1;
+                    if (employees.Count > 0)
+                        i += employees[employees.Count - 1].Id;
+                    employee.Id = i;
+                    employees.Add(employee);
+                }
+                else
+                {
+                    int index = employees.FindIndex(e => e.Id == employee.Id);
+                    employees[index] = employee;
+                }
+                SaveData();
             }
             catch (Exception ex)
             {
@@ -115,25 +128,26 @@ namespace mitarbeiter_verwaltung
         }
 
 
-
-
-        void SaveEmployee(Employee employee)
+        private void DeleteButtonClick(object sender, EventArgs eargs)
         {
-            if (employee.Id > 0)
+            try
             {
-                int index = employees.FindIndex(e => e.Id == employee.Id);
-                employees[index] = employee;
+                Employee employee = FromForm();
+                if(employee.Id == 0)
+                {
+                    throw new Exception("Kein Angestellter ausgewählt!");
+                } else
+                {
+                    employees.RemoveAt(employees.FindIndex(e => e.Id == employee.Id));
+                }
+                SaveData();
             }
-            else
+            catch (Exception ex)
             {
-                int i = 1;
-                if (employees.Count > 0)
-                    i += employees[employees.Count - 1].Id;
-                employee.Id = i;
-                employees.Add(employee);
+                Console.WriteLine(ex.Message);
             }
-            SaveData();
         }
+
 
         void SaveData()
         {
