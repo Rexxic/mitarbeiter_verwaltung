@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -62,19 +63,71 @@ namespace mitarbeiter_verwaltung
             button.Size = new System.Drawing.Size(150, 40);
             button.Text = "Speichern";
             button.UseVisualStyleBackColor = true;
+            button.Click += new EventHandler(save_button_Click);
             this.splitContainer1.Panel1.Controls.Add(button);
         }
+
+        private Employee FromForm()
+        {
+            Employee employee = new Employee();
+            foreach (Control c in splitContainer1.Panel1.Controls)
+            {
+                if (c is TextBox)
+                {
+                    TextBox textBox = (TextBox)c;
+                    string propertyName = textBox.Name.Substring(0, textBox.Name.IndexOf(':'));
+                    PropertyInfo property = typeof(Employee).GetProperty(propertyName);
+                    Object value;
+
+                    try
+                    {
+                        if (textBox.Text.Length == 0)
+                        {
+                            continue;
+                        }
+                        else if (property.PropertyType is string)
+                        {
+                            value = textBox.Text;
+                        }
+                        else
+                        {
+                            value = Convert.ChangeType(textBox.Text, property.PropertyType);
+                        }
+                        property.SetValue(employee, value);
+                    } catch (Exception ex) {
+                        throw new Exception(propertyName + ": " + ex.Message, ex);
+                    }
+                }
+            }
+            return employee;
+        }
+
+        private void save_button_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Console.WriteLine(FromForm().ToString());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+
 
 
         void SaveEmployee(Employee employee)
         {
-            if (employee.Id > 0) {
-                int index = employees.FindIndex(e  => e.Id == employee.Id);
+            if (employee.Id > 0)
+            {
+                int index = employees.FindIndex(e => e.Id == employee.Id);
                 employees[index] = employee;
-            } else
+            }
+            else
             {
                 int i = 1;
-                if (employees.Count > 0) 
+                if (employees.Count > 0)
                     i += employees[employees.Count - 1].Id;
                 employee.Id = i;
                 employees.Add(employee);
@@ -86,7 +139,7 @@ namespace mitarbeiter_verwaltung
         {
             using (StreamWriter writer = new StreamWriter(DATABASE))
             {
-                foreach (Employee e in  employees)
+                foreach (Employee e in employees)
                 {
                     writer.WriteLine(e.ToString());
                 }
@@ -106,7 +159,8 @@ namespace mitarbeiter_verwaltung
                     if (i < 0)
                     {
                         employees.Add(employee);
-                    } else
+                    }
+                    else
                     {
                         employees[i] = employee;
                     }
@@ -129,7 +183,8 @@ namespace mitarbeiter_verwaltung
         public int Id
         {
             get => _id;
-            set {
+            set
+            {
                 if (value < 1)
                     throw new ArgumentException("ID muss mindestens 1 sein.");
                 _id = value;
