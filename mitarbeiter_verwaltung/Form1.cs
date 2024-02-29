@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -21,6 +20,18 @@ namespace mitarbeiter_verwaltung
             InitializeComponent();
             GenerateFields(Employee.GetAttributeNames());
             LoadData();
+            UpdateList();
+        }
+
+        void UpdateList()
+        {
+            listView1.Items.Clear();
+            foreach (Employee e in employees)
+            {
+                ListViewItem item = new ListViewItem($"{e.Id} : {e.Vorname} {e.Name}");
+                item.Tag = e;
+                listView1.Items.Add(item);
+            }
         }
 
         void GenerateFields(List<string> fields)
@@ -32,7 +43,8 @@ namespace mitarbeiter_verwaltung
                 box.Location = new System.Drawing.Point(200, 100 + k * 35);
                 box.Name = field + ":txt";
                 box.Size = new System.Drawing.Size(200, 32);
-                if (box.Name.Equals("Id:txt")) {
+                if (box.Name.Equals("Id:txt"))
+                {
                     box.Enabled = false;
                 }
                 this.splitContainer1.Panel1.Controls.Add(box);
@@ -79,21 +91,23 @@ namespace mitarbeiter_verwaltung
 
                     try
                     {
-                        if (textBox.Text.Length == 0)
-                        {
-                            continue;
-                        }
-                        else if (property.PropertyType is string)
+                        if (property.PropertyType == typeof(string))
                         {
                             value = textBox.Text;
                         }
                         else
                         {
+                            if (property.PropertyType == typeof(int) && textBox.Text.Equals(""))
+                            {
+                                continue;
+                            }
                             value = Convert.ChangeType(textBox.Text, property.PropertyType);
                         }
                         property.SetValue(employee, value);
-                    } catch (Exception ex) {
-                        throw new Exception(propertyName + ": " + ex.Message, ex);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception(propertyName + ": " + ex.InnerException.Message, ex.InnerException);
                     }
                 }
             }
@@ -133,10 +147,11 @@ namespace mitarbeiter_verwaltung
             try
             {
                 Employee employee = FromForm();
-                if(employee.Id == 0)
+                if (employee.Id == 0)
                 {
                     throw new Exception("Kein Angestellter ausgewählt!");
-                } else
+                }
+                else
                 {
                     employees.RemoveAt(employees.FindIndex(e => e.Id == employee.Id));
                 }
@@ -158,27 +173,40 @@ namespace mitarbeiter_verwaltung
                     writer.WriteLine(e.ToString());
                 }
             }
+            UpdateList();
         }
 
         void LoadData()
         {
-            using (StreamReader reader = new StreamReader(DATABASE))
+            if (File.Exists(DATABASE))
             {
-                string line;
-
-                while ((line = reader.ReadLine()) != null)
+                using (StreamReader reader = new StreamReader(DATABASE))
                 {
-                    Employee employee = new Employee(line);
-                    int i = employees.FindIndex(e => e.Id == employee.Id);
-                    if (i < 0)
+                    string line;
+
+                    while ((line = reader.ReadLine()) != null)
                     {
-                        employees.Add(employee);
-                    }
-                    else
-                    {
-                        employees[i] = employee;
+                        Employee employee = new Employee(line);
+                        int i = employees.FindIndex(e => e.Id == employee.Id);
+                        if (i < 0)
+                        {
+                            employees.Add(employee);
+                        }
+                        else
+                        {
+                            employees[i] = employee;
+                        }
                     }
                 }
+            }
+        }
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs eargs)
+        {
+            if (listView1.SelectedItems.Count == 1)
+            {
+                Employee selected = (Employee)listView1.SelectedItems[0].Tag;
+                Console.WriteLine(selected);
             }
         }
     }
@@ -334,7 +362,7 @@ namespace mitarbeiter_verwaltung
                     }
                     catch (Exception ex)
                     {
-                        throw new ArgumentException($"Fehler beim Konvertieren des Wertes für {property.Name}: {ex.Message}");
+                        Console.WriteLine($"Fehler beim Konvertieren des Wertes für {property.Name}: {ex.Message}");
                     }
                 }
             }
