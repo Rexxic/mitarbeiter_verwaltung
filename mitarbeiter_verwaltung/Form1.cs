@@ -18,7 +18,7 @@ namespace mitarbeiter_verwaltung
         public Form1()
         {
             InitializeComponent();
-            GenerateFields(Employee.GetAttributeNames());
+            GenerateFields(typeof(Employee).GetProperties());
             LoadData();
             UpdateList();
         }
@@ -28,36 +28,61 @@ namespace mitarbeiter_verwaltung
             listView1.Items.Clear();
             foreach (Employee e in employees)
             {
-                ListViewItem item = new ListViewItem($"{e.Id} : {e.Vorname} {e.Name}");
+               Console.WriteLine(e);
+                ListViewItem item = new ListViewItem($"{ e.Id } : {e.Vorname} {e.Name}");
                 item.Tag = e;
                 listView1.Items.Add(item);
             }
+            listView1.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+            listView1.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+            listView1.Update();
         }
 
-        void GenerateFields(List<string> fields)
+        void GenerateFields(PropertyInfo[] fields)
         {
             var k = 0;
-            foreach (var field in fields)
+            foreach (PropertyInfo field in fields)
             {
-                TextBox box = new TextBox();
-                box.Location = new System.Drawing.Point(200, 100 + k * 35);
-                box.Name = field + ":txt";
-                box.Size = new System.Drawing.Size(200, 32);
-                if (box.Name.Equals("Id:txt"))
+                if (field.PropertyType == typeof(Position))
                 {
-                    box.Enabled = false;
+                    ComboBox box = new ComboBox();
+                    box.Location = new System.Drawing.Point(200, 100 + k * 35);
+                    box.Name = field.Name + ":cb";
+                    box.Size = new System.Drawing.Size(200, 32);
+                    box.DataSource = Enum.GetValues(typeof(Position));
+                    this.splitContainer1.Panel1.Controls.Add(box);
                 }
-                this.splitContainer1.Panel1.Controls.Add(box);
+                else if (field.PropertyType == typeof(DateTime))
+                {
+                    DateTimePicker box = new DateTimePicker();
+                    box.Location = new System.Drawing.Point(200, 100 + k * 35);
+                    box.Name = field.Name + ":cb";
+                    box.Size = new System.Drawing.Size(200, 32);
+                    this.splitContainer1.Panel1.Controls.Add(box);
+                }
+                else
+                {
+                    TextBox box = new TextBox();
+                    box.Location = new System.Drawing.Point(200, 100 + k * 35);
+                    box.Name = field.Name + ":txt";
+                    box.Size = new System.Drawing.Size(200, 32);
+                    if (box.Name.Equals("Id:txt"))
+                    {
+                        box.Enabled = false;
+                    }
+                    this.splitContainer1.Panel1.Controls.Add(box);
+                }
 
                 Label label = new Label();
                 label.AutoSize = true;
                 label.Location = new System.Drawing.Point(50, 103 + k * 35);
-                label.Name = field + ":lbl";
+                label.Name = field.Name + ":lbl";
                 label.Size = new System.Drawing.Size(150, 26);
-                label.Text = field;
+                label.Text = field.Name;
                 this.splitContainer1.Panel1.Controls.Add(label);
                 k++;
             }
+
             Button buttonSave = new Button();
             buttonSave.Location = new System.Drawing.Point(50, 110 + k * 35);
             buttonSave.Name = "save:btn";
@@ -384,16 +409,6 @@ namespace mitarbeiter_verwaltung
             }
 
             return stringBuilder.ToString().TrimEnd(';');
-        }
-
-        public static List<string> GetAttributeNames()
-        {
-            List<string> names = new List<string>();
-            foreach (var property in typeof(Employee).GetProperties())
-            {
-                names.Add(property.Name);
-            }
-            return names;
         }
     }
 }
