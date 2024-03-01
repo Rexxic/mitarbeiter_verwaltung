@@ -28,8 +28,8 @@ namespace mitarbeiter_verwaltung
             listView1.Items.Clear();
             foreach (Employee e in employees)
             {
-               Console.WriteLine(e);
-                ListViewItem item = new ListViewItem($"{ e.Id } : {e.Vorname} {e.Name}");
+                Console.WriteLine(e);
+                ListViewItem item = new ListViewItem($"{e.Id} : {e.Vorname} {e.Name}");
                 item.Tag = e;
                 listView1.Items.Add(item);
             }
@@ -43,13 +43,13 @@ namespace mitarbeiter_verwaltung
             var k = 0;
             foreach (PropertyInfo field in fields)
             {
-                if (field.PropertyType == typeof(Position))
+                if (field.PropertyType.IsEnum)
                 {
                     ComboBox box = new ComboBox();
                     box.Location = new System.Drawing.Point(200, 100 + k * 35);
                     box.Name = field.Name + ":cb";
                     box.Size = new System.Drawing.Size(200, 32);
-                    box.DataSource = Enum.GetValues(typeof(Position));
+                    box.DataSource = Enum.GetValues(field.PropertyType);
                     this.splitContainer1.Panel1.Controls.Add(box);
                 }
                 else if (field.PropertyType == typeof(DateTime))
@@ -76,30 +76,39 @@ namespace mitarbeiter_verwaltung
                 Label label = new Label();
                 label.AutoSize = true;
                 label.Location = new System.Drawing.Point(50, 103 + k * 35);
-                label.Name = field.Name + ":lbl";
+                label.Name = field.Name;
                 label.Size = new System.Drawing.Size(150, 26);
                 label.Text = field.Name;
                 this.splitContainer1.Panel1.Controls.Add(label);
                 k++;
             }
 
+            Button buttonDelete = new Button();
+            buttonDelete.Location = new System.Drawing.Point(50, 110 + k * 35);
+            buttonDelete.Name = "delete";
+            buttonDelete.Size = new System.Drawing.Size(100, 40);
+            buttonDelete.Text = "Löschen";
+            buttonDelete.UseVisualStyleBackColor = true;
+            buttonDelete.Click += new EventHandler(DeleteButtonClick);
+            this.splitContainer1.Panel1.Controls.Add(buttonDelete);
+
             Button buttonSave = new Button();
-            buttonSave.Location = new System.Drawing.Point(50, 110 + k * 35);
-            buttonSave.Name = "save:btn";
-            buttonSave.Size = new System.Drawing.Size(150, 40);
+            buttonSave.Location = new System.Drawing.Point(175, 110 + k * 35);
+            buttonSave.Name = "save";
+            buttonSave.Size = new System.Drawing.Size(100, 40);
             buttonSave.Text = "Speichern";
             buttonSave.UseVisualStyleBackColor = true;
             buttonSave.Click += new EventHandler(SaveButtonClick);
             this.splitContainer1.Panel1.Controls.Add(buttonSave);
 
-            Button buttonDelete = new Button();
-            buttonDelete.Location = new System.Drawing.Point(250, 110 + k * 35);
-            buttonDelete.Name = "delete:btn";
-            buttonDelete.Size = new System.Drawing.Size(150, 40);
-            buttonDelete.Text = "Löschen";
-            buttonDelete.UseVisualStyleBackColor = true;
-            buttonDelete.Click += new EventHandler(DeleteButtonClick);
-            this.splitContainer1.Panel1.Controls.Add(buttonDelete);
+            Button buttonNew = new Button();
+            buttonNew.Location = new System.Drawing.Point(300, 110 + k * 35);
+            buttonNew.Name = "new";
+            buttonNew.Size = new System.Drawing.Size(100, 40);
+            buttonNew.Text = "Neu";
+            buttonNew.UseVisualStyleBackColor = true;
+            buttonNew.Click += new EventHandler(NewButtonClick);
+            this.splitContainer1.Panel1.Controls.Add(buttonNew);
         }
 
         private Employee FromForm()
@@ -107,15 +116,20 @@ namespace mitarbeiter_verwaltung
             Employee employee = new Employee();
             foreach (Control c in splitContainer1.Panel1.Controls)
             {
+                int splitterIndex = c.Name.IndexOf(':');
+                if (splitterIndex == -1)
+                {
+                    continue;
+                }
+                string propertyName = c.Name.Substring(0, splitterIndex);
+                PropertyInfo property = typeof(Employee).GetProperty(propertyName);
+                Console.WriteLine($"{c} | {propertyName} | {property}");
                 if (c is TextBox)
                 {
                     TextBox textBox = (TextBox)c;
-                    string propertyName = textBox.Name.Substring(0, textBox.Name.IndexOf(':'));
-                    PropertyInfo property = typeof(Employee).GetProperty(propertyName);
-                    Object value;
-
                     try
                     {
+                        object value;
                         if (property.PropertyType == typeof(string))
                         {
                             value = textBox.Text;
@@ -135,8 +149,66 @@ namespace mitarbeiter_verwaltung
                         throw new Exception(propertyName + ": " + ex.InnerException.Message, ex.InnerException);
                     }
                 }
+                else
+                {
+                    object o = null;
+                    if (c is DateTimePicker)
+                    {
+                        DateTimePicker dateTimePicker = (DateTimePicker)c;
+                        o = dateTimePicker.Value;
+                    }
+                    else if (c is ComboBox)
+                    {
+                        ComboBox comboBox = (ComboBox)c;
+                        o = comboBox.SelectedItem;
+                    }
+                    else
+                    {
+                        throw new Exception($"Unknown type of Control element:{c}");
+                    }
+                    property.SetValue(employee, o);
+
+                }
             }
             return employee;
+        }
+
+        void ToForm(Employee employee)
+        {
+            foreach (Control c in splitContainer1.Panel1.Controls)
+            {
+                int splitterIndex = c.Name.IndexOf(':');
+                if (splitterIndex == -1)
+                {
+                    continue;
+                }
+                string propertyName = c.Name.Substring(0, splitterIndex);
+                PropertyInfo property = typeof(Employee).GetProperty(propertyName);
+                if(property == null)
+                {
+                    continue;
+                }
+                object value = property.GetValue(employee, null);
+                if (c is TextBox)
+                {
+                    TextBox textBox = (TextBox)c;
+                    textBox.Text = value.ToString();
+                }
+                else if (c is DateTimePicker)
+                {
+                    DateTimePicker datePicker = (DateTimePicker)c;
+                    DateTime dateTime = (DateTime)value;
+                    if (dateTime > DateTime.MinValue && dateTime < DateTime.MaxValue)
+                    {
+                        datePicker.Value = (DateTime)value;
+                    }
+                }
+                else if (c is ComboBox)
+                {
+                    ComboBox comboBox = (ComboBox)c;
+                    comboBox.SelectedItem = value;
+                }
+            }
         }
 
         private void SaveButtonClick(object sender, EventArgs eargs)
@@ -179,6 +251,7 @@ namespace mitarbeiter_verwaltung
                 else
                 {
                     employees.RemoveAt(employees.FindIndex(e => e.Id == employee.Id));
+                    ToForm(new Employee());
                 }
                 SaveData();
             }
@@ -188,8 +261,13 @@ namespace mitarbeiter_verwaltung
             }
         }
 
+        private void NewButtonClick(object sender, EventArgs eargs)
+        {
+            ToForm(new Employee());
+        }
 
-        void SaveData()
+
+            void SaveData()
         {
             using (StreamWriter writer = new StreamWriter(DATABASE))
             {
@@ -231,7 +309,7 @@ namespace mitarbeiter_verwaltung
             if (listView1.SelectedItems.Count == 1)
             {
                 Employee selected = (Employee)listView1.SelectedItems[0].Tag;
-                Console.WriteLine(selected);
+                ToForm(selected);
             }
         }
     }
@@ -258,7 +336,7 @@ namespace mitarbeiter_verwaltung
             }
         }
 
-        private string _name;
+        private string _name = "";
         public string Name
         {
             get => _name;
@@ -270,7 +348,7 @@ namespace mitarbeiter_verwaltung
             }
         }
 
-        private string _vorname;
+        private string _vorname = "";
         public string Vorname
         {
             get => _vorname;
@@ -282,7 +360,7 @@ namespace mitarbeiter_verwaltung
             }
         }
 
-        private string _adresse;
+        private string _adresse = "";
         public string Adresse
         {
             get => _adresse;
@@ -294,7 +372,7 @@ namespace mitarbeiter_verwaltung
             }
         }
 
-        private string _telefon;
+        private string _telefon = "";
         public string Telefon
         {
             get => _telefon;
@@ -311,7 +389,7 @@ namespace mitarbeiter_verwaltung
             }
         }
 
-        private string _email;
+        private string _email = "";
         public string Email
         {
             get => _email;
@@ -335,7 +413,7 @@ namespace mitarbeiter_verwaltung
             set { _position = value; }
         }
 
-        private DateTime _firmeneintritt;
+        private DateTime _firmeneintritt = DateTime.Now;
         public DateTime Firmeneintritt
         {
             get => _firmeneintritt;
@@ -354,7 +432,7 @@ namespace mitarbeiter_verwaltung
             }
         }
 
-        private DateTime _geburtsdatum;
+        private DateTime _geburtsdatum = DateTime.Now;
         public DateTime Geburtsdatum
         {
             get => _geburtsdatum;
