@@ -146,7 +146,8 @@ namespace mitarbeiter_verwaltung
                     }
                     catch (Exception ex)
                     {
-                        throw new Exception(propertyName + ": " + ex.InnerException.Message, ex.InnerException);
+                        var message = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                        throw new Exception(propertyName + ": " + message, ex);
                     }
                 }
                 else
@@ -234,7 +235,7 @@ namespace mitarbeiter_verwaltung
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                UserFeedback(ex.Message);
             }
         }
 
@@ -257,8 +258,13 @@ namespace mitarbeiter_verwaltung
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                UserFeedback(ex.Message);
             }
+        }
+
+        private void UserFeedback(string s)
+        {
+            textBox1.Text = s;
         }
 
         private void NewButtonClick(object sender, EventArgs eargs)
@@ -330,8 +336,8 @@ namespace mitarbeiter_verwaltung
             get => _id;
             set
             {
-                if (value < 1)
-                    throw new ArgumentException("ID muss mindestens 1 sein.");
+                if (value < 0)
+                    throw new ArgumentException("ID muss mindestens 0 sein.");
                 _id = value;
             }
         }
