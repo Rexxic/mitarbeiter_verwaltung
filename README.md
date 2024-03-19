@@ -32,6 +32,7 @@ Präsentation bis 12.04 4-5 Folien Abage in der Unterrichtsstunde
 ## Use Case Diagram
 ![Use Case Diagram](docfiles/Use%20Case.svg)
 
+## Gant Diagram
 ![image](https://github.com/Rexxic/mitarbeiter_verwaltung/assets/156774741/5deb52ab-a8ad-471d-9044-1616036271b2)
 
 ## SaveData Methode Structogramm
