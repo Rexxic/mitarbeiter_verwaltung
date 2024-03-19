@@ -34,6 +34,9 @@ Präsentation bis 12.04 4-5 Folien Abage in der Unterrichtsstunde
 
 ![image](https://github.com/Rexxic/mitarbeiter_verwaltung/assets/156774741/5deb52ab-a8ad-471d-9044-1616036271b2)
 
+SaveData Methode Strctogramm ![image](https://github.com/Rexxic/mitarbeiter_verwaltung/assets/156774741/55105136-50b0-4983-80a4-3bb52557e606)
+
+
 
 
 
