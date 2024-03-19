@@ -185,7 +185,7 @@ namespace mitarbeiter_verwaltung
                 }
                 string propertyName = c.Name.Substring(0, splitterIndex);
                 PropertyInfo property = typeof(Employee).GetProperty(propertyName);
-                if(property == null)
+                if (property == null)
                 {
                     continue;
                 }
@@ -273,7 +273,7 @@ namespace mitarbeiter_verwaltung
         }
 
 
-            void SaveData()
+        void SaveData()
         {
             using (StreamWriter writer = new StreamWriter(DATABASE))
             {
